@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Priority Flow</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#0a0a1a;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+  
+  /* ── Sidebar ── */
+  .sidebar{position:fixed;top:0;left:0;width:240px;height:100vh;background:var(--bg-sidebar);border-right:1px solid var(--border);padding:0;overflow-y:auto;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+  .sidebar::-webkit-scrollbar{width:4px}
+  .sidebar::-webkit-scrollbar-thumb{background:#4c1d95;border-radius:4px}
+  .sidebar .logo{padding:24px 20px 16px;border-bottom:1px solid rgba(76,29,149,.4);position:relative}
+  .sidebar .logo::after{content:'';position:absolute;bottom:-1px;left:20%;width:60%;height:1px;background:linear-gradient(90deg,transparent,#a855f7,transparent)}
+  .sidebar .logo h2{font-size:15px;font-weight:900;color:white;letter-spacing:2px;background:linear-gradient(135deg,#fff 60%,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .sidebar .logo p{font-size:10px;color:#7c3aed;margin-top:2px;letter-spacing:.1em}
+  .sidebar .role-tag{margin:14px 20px;background:linear-gradient(135deg,#4c1d95,#6d28d9);color:#e9d5ff;font-size:10px;font-weight:700;padding:5px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(168,85,247,.3);box-shadow:0 0 20px rgba(109,40,217,.2)}
+  .sidebar .role-tag i{font-size:10px}
+  .nav-section{font-size:9px;font-weight:700;color:#4c1d95;text-transform:uppercase;letter-spacing:.12em;padding:16px 20px 6px}
+  .sidebar a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:#8b7cb8;text-decoration:none;font-size:13px;border-left:3px solid transparent;transition:all .2s ease;position:relative;margin:1px 8px;border-radius:8px}
+  .sidebar a i{width:18px;text-align:center;font-size:14px;transition:transform .2s}
+  .sidebar a:hover{background:rgba(109,40,217,.15);color:white;border-left-color:#a855f7}
+  .sidebar a:hover i{transform:scale(1.15)}
+  .sidebar a.active{background:rgba(109,40,217,.2);color:white;border-left-color:#a855f7;box-shadow:inset 0 0 20px rgba(168,85,247,.05)}
+  .sidebar .logout{position:sticky;bottom:0;padding:14px 20px;border-top:1px solid rgba(76,29,149,.4);margin-top:16px;background:linear-gradient(0deg,#1a0533 60%,transparent)}
+  .sidebar .logout a{color:#ef4444;border-left-color:transparent}
+  .sidebar .logout a:hover{background:rgba(239,68,68,.1);color:#fca5a5}
+
+  /* ── Main ── */
+  .main{margin-left:240px;padding:24px 32px;min-height:100vh;position:relative}
+  
+  /* ── Topbar ── */
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid rgba(76,29,149,.2)}
+  .topbar h1{font-size:20px;font-weight:700;color:white;display:flex;align-items:center;gap:10px;animation:fadeSlideIn .4s ease}
+  .topbar h1 i{color:#a855f7;font-size:18px}
+  .topbar .user{font-size:12px;color:#c4b5fd;background:rgba(45,16,84,.6);padding:6px 16px 6px 12px;border-radius:20px;border:1px solid rgba(109,40,217,.3);display:flex;align-items:center;gap:8px;backdrop-filter:blur(4px)}
+  .topbar .user i{color:#a855f7;font-size:14px}
+
+  /* ── Toast message ── */
+  .toast{background:linear-gradient(135deg,#052e16,#064e3b);color:#4ade80;border:1px solid #166534;padding:12px 20px;border-radius:12px;font-size:13px;margin-bottom:20px;display:flex;align-items:center;gap:10px;animation:slideDown .4s ease;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+  .toast i{font-size:16px}
+
+  /* ── Cards ── */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+  .card{background:linear-gradient(135deg,#140028,#1f0540);border:1px solid rgba(109,40,217,.25);border-radius:16px;padding:20px 22px;position:relative;overflow:hidden;transition:all .3s cubic-bezier(.4,0,.2,1);cursor:default;animation:fadeSlideIn .5s ease both}
+  .card:nth-child(1){animation-delay:.05s}
+  .card:nth-child(2){animation-delay:.1s}
+  .card:nth-child(3){animation-delay:.15s}
+  .card:nth-child(4){animation-delay:.2s}
+  .card::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle,var(--glow) 0%,transparent 70%);opacity:0;transition:opacity .4s}
+  .card:hover::before{opacity:1}
+  .card:hover{transform:translateY(-4px);border-color:rgba(168,85,247,.5);box-shadow:0 8px 32px rgba(109,40,217,.25)}
+  .card .card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;position:relative;z-index:1}
+  .card .card-icon.blue{background:linear-gradient(135deg,#1e3a5f,#1e40af);color:#60a5fa}
+  .card .card-icon.green{background:linear-gradient(135deg,#064e3b,#047857);color:#34d399}
+  .card .card-icon.purple{background:linear-gradient(135deg,#3b0764,#6d28d9);color:#c084fc}
+  .card .card-icon.orange{background:linear-gradient(135deg,#78350f,#c2410c);color:#fb923c}
+  .card .label{font-size:10px;font-weight:600;color:#6d28d9;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;position:relative;z-index:1}
+  .card .value{font-size:30px;font-weight:800;color:white;position:relative;z-index:1;line-height:1.2}
+  .card .value span{background:linear-gradient(135deg,#a855f7,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+  /* ── Section ── */
+  .section{background:linear-gradient(135deg,#120024,#1a0533);border:1px solid rgba(109,40,217,.2);border-radius:16px;padding:24px;margin-bottom:24px;animation:fadeSlideIn .5s ease both}
+  .section h3{font-size:11px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid rgba(76,29,149,.3);display:flex;align-items:center;gap:8px}
+  .section h3 i{font-size:14px}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  label{display:block;font-size:10px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+  input,select,textarea{width:100%;padding:10px 14px;background:rgba(15,5,32,.6);border:1.5px solid rgba(76,29,149,.5);border-radius:10px;color:#e2e8f0;font-size:13px;font-family:inherit;transition:all .2s;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.15)}
+  select option{background:#1a0533}
+  textarea{min-height:80px;resize:vertical}
+  input::placeholder{color:#4c1d95}
+
+  /* ── Buttons ── */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 22px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;transition:all .2s ease;position:relative;overflow:hidden}
+  .btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,.06));pointer-events:none}
+  .btn-primary{background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(124,58,237,.4)}
+  .btn-primary:active{transform:translateY(0)}
+  .btn-secondary{background:rgba(109,40,217,.2);color:#c4b5fd;border:1px solid rgba(109,40,217,.3)}
+  .btn-secondary:hover{background:rgba(109,40,217,.3);color:white}
+  .btn-danger{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.3);padding:6px 14px;font-size:11px;border-radius:8px}
+  .btn-danger:hover{background:rgba(239,68,68,.2);color:#fca5a5}
+  .btn-warning{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.25);padding:6px 14px;font-size:11px;border-radius:8px}
+  .btn-warning:hover{background:rgba(251,191,36,.2);color:#fde68a}
+  .mt{margin-top:16px}
+  .btn-sm{padding:6px 14px;font-size:11px;border-radius:8px}
+
+  /* ── Tables ── */
+  .table-wrap{overflow-x:auto;border-radius:12px}
+  table{width:100%;border-collapse:separate;border-spacing:0}
+  th{background:rgba(15,5,32,.6);font-size:9px;font-weight:700;color:#4c1d95;text-transform:uppercase;letter-spacing:.1em;padding:12px 14px;text-align:left;border-bottom:1px solid rgba(45,16,84,.5);position:sticky;top:0;z-index:1}
+  td{padding:12px 14px;font-size:13px;color:#c4b5fd;border-bottom:1px solid rgba(26,5,51,.5);transition:background .15s}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(109,40,217,.06)}
+  tr{animation:fadeIn .35s ease both}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+  .badge-green{background:rgba(4,120,87,.15);color:#4ade80;border:1px solid rgba(22,101,52,.5)}
+  .badge-red{background:rgba(153,27,27,.15);color:#f87171;border:1px solid rgba(153,27,27,.4)}
+  .badge-purple{background:rgba(109,40,217,.15);color:#c4b5fd;border:1px solid rgba(109,40,217,.3)}
+  .badge-yellow{background:rgba(120,53,15,.15);color:#fbbf24;border:1px solid rgba(120,53,15,.4)}
+  .gap{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+  /* ── Modal ── */
+  .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:fadeIn .2s}
+  .modal-overlay.show{display:flex}
+  .modal-box{background:linear-gradient(135deg,#1a0533,#24054d);border:1px solid rgba(109,40,217,.5);border-radius:20px;padding:32px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 16px 64px rgba(0,0,0,.6);animation:scaleIn .3s cubic-bezier(.4,0,.2,1)}
+  .modal-box h2{font-size:18px;color:white;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+  .modal-box h2 i{color:#a855f7}
+  .modal-close{float:right;background:none;border:none;color:#7c3aed;font-size:24px;cursor:pointer;transition:color .2s;line-height:1}
+  .modal-close:hover{color:#a855f7}
+
+  /* ── Animations ── */
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes fadeSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+  @keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .count-anim{animation:countUp .6s ease both}
+
+  /* ── Empty state ── */
+  .empty{color:#4c1d95;font-size:13px;text-align:center;padding:32px 16px;font-style:italic}
+
+  /* ── Responsive ── */
+  .menu-toggle{display:none;position:fixed;top:16px;left:16px;z-index:200;background:#2d1054;border:1px solid #6d28d9;color:white;width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:18px;align-items:center;justify-content:center}
+  @media(max-width:768px){
+    .menu-toggle{display:flex}
+    .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0)}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+    .sidebar-overlay.show{display:block}
+    .main{margin-left:0;padding:16px}
+    .cards{grid-template-columns:1fr 1fr}
+    .form-grid{grid-template-columns:1fr}
+    .topbar h1{font-size:16px}
+  }
+  @media(max-width:480px){.cards{grid-template-columns:1fr}}
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:#0a0a1a}
+  ::-webkit-scrollbar-thumb{background:#2d1054;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#4c1d95}
+</style>
+</head>
+<body>
+<button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="logo">
+    <h2>PRIORITY FLOW</h2>
+    <p>Panel de Administracion</p>
+  </div>
+  <span class="role-tag"><i class="fas fa-shield-halved"></i> ADMIN</span>
+  <div class="nav-section">Navegacion</div>
+  <a href="/admin?seccion=dashboard&u=<%= usuario.username %>" class="<%= seccion==='dashboard'?'active':'' %>"><i class="fas fa-chart-pie"></i> Dashboard</a>
+  <a href="/admin?seccion=usuarios&u=<%= usuario.username %>" class="<%= seccion==='usuarios'?'active':'' %>"><i class="fas fa-users"></i> Usuarios</a>
+  <a href="/admin?seccion=personas&u=<%= usuario.username %>" class="<%= seccion==='personas'?'active':'' %>"><i class="fas fa-user"></i> Personas</a>
+  <a href="/admin?seccion=organizaciones&u=<%= usuario.username %>" class="<%= seccion==='organizaciones'?'active':'' %>"><i class="fas fa-building"></i> Organizaciones</a>
+  <div class="nav-section">Configuracion</div>
+  <a href="/admin?seccion=categorias&u=<%= usuario.username %>" class="<%= seccion==='categorias'?'active':'' %>"><i class="fas fa-tags"></i> Categorias</a>
+  <a href="/admin?seccion=importancia&u=<%= usuario.username %>" class="<%= seccion==='importancia'?'active':'' %>"><i class="fas fa-signal"></i> Importancia</a>
+  <a href="/admin?seccion=medios&u=<%= usuario.username %>" class="<%= seccion==='medios'?'active':'' %>"><i class="fas fa-comment-dots"></i> Medios</a>
+  <a href="/admin?seccion=parametros&u=<%= usuario.username %>" class="<%= seccion==='parametros'?'active':'' %>"><i class="fas fa-sliders"></i> Parametrizacion</a>
+  <a href="/admin?seccion=mensajes&u=<%= usuario.username %>" class="<%= seccion==='mensajes'?'active':'' %>"><i class="fas fa-envelope"></i> Mensajes</a>
+  <div class="logout"><a href="/logout"><i class="fas fa-right-from-bracket"></i> Cerrar sesion</a></div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1><i class="fas fa-<%= seccion==='dashboard'?'chart-pie':seccion==='usuarios'?'users':seccion==='personas'?'user':seccion==='organizaciones'?'building':seccion==='categorias'?'tags':seccion==='importancia'?'signal':seccion==='medios'?'comment-dots':seccion==='parametros'?'sliders':'envelope' %>"></i> <%= seccion.charAt(0).toUpperCase() + seccion.slice(1) %></h1>
+    <span class="user"><i class="fas fa-circle" style="color:#4ade80;font-size:8px"></i> <%= usuario.username %> <span style="color:#4c1d95">|</span> <%= usuario.org %></span>
+  </div>
+
+  <% if (typeof msg !== 'undefined' && msg && msg.length > 0 && !msg.includes('Error')) { %>
+    <div class="toast"><i class="fas fa-check-circle"></i> <%= msg %></div>
+  <% } else if (typeof msg !== 'undefined' && msg && msg.includes('Error')) { %>
+    <div class="toast" style="background:linear-gradient(135deg,#450a0a,#7f1d1d);color:#f87171;border-color:#991b1b"><i class="fas fa-exclamation-circle"></i> <%= msg %></div>
+  <% } %>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <% if (seccion === 'dashboard') { %>
+  <div class="cards">
+    <div class="card" style="--glow:rgba(96,165,250,.15)">
+      <div class="card-icon blue"><i class="fas fa-users"></i></div>
+      <div class="label">Usuarios registrados</div>
+      <div class="value"><span data-count="<%= stats.usuarios %>">0</span></div>
+    </div>
+    <div class="card" style="--glow:rgba(52,211,153,.15)">
+      <div class="card-icon green"><i class="fas fa-id-card"></i></div>
+      <div class="label">Personas</div>
+      <div class="value"><span data-count="<%= stats.personas %>">0</span></div>
+    </div>
+    <div class="card" style="--glow:rgba(192,132,252,.15)">
+      <div class="card-icon purple"><i class="fas fa-envelope"></i></div>
+      <div class="label">Mensajes enviados</div>
+      <div class="value"><span data-count="<%= stats.mensajes %>">0</span></div>
+    </div>
+    <div class="card" style="--glow:rgba(251,146,60,.15)">
+      <div class="card-icon orange"><i class="fas fa-clock"></i></div>
+      <div class="label">Pendientes</div>
+      <div class="value"><span data-count="<%= stats.pendientes %>">0</span></div>
+    </div>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Ultimos mensajes</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Asunto</th><th>Categoria</th><th>Importancia</th><th>Fecha</th></tr></thead>
+    <tbody>
+    <% if(data.length === 0){ %><tr><td colspan="5" class="empty"><i class="fas fa-inbox"></i> Sin mensajes recientes</td></tr><% } %>
+    <% data.forEach((m,i) => { %>
+    <tr style="animation-delay:<%= i*0.04 %>s"><td style="color:#6d28d9;font-weight:700">#<%= m.id %></td><td style="color:white;font-weight:500"><%= m.asunto %></td>
+    <td><span class="badge badge-purple"><i class="fas fa-tag"></i> <%= m.categoria %></span></td>
+    <td><span class="badge <%= m.orden==1?'badge-red':m.orden==2?'badge-yellow':'badge-green' %>"><i class="fas fa-<%= m.orden==1?'arrow-up':m.orden==2?'minus':'arrow-down' %>"></i> <%= m.importancia %></span></td>
+    <td style="color:#4c1d95;font-size:11px"><i class="far fa-calendar"></i> <%= new Date(m.fechaCreacion).toLocaleString() %></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ USUARIOS ═══ -->
+  <% } else if (seccion === 'usuarios') { %>
+  <div class="section"><h3><i class="fas fa-plus-circle"></i> Nuevo usuario</h3>
+    <form action="/admin/usuarios/new" method="POST">
+      <div class="form-grid">
+        <div><label><i class="fas fa-user"></i> Persona</label><select name="id_persona" required>
+          <% extras.personas.forEach(p => { %><option value="<%= p.id %>"><%= p.nombre %> <%= p.apellido %></option><% }) %>
+        </select></div>
+        <div><label><i class="fas fa-shield"></i> Rol</label><select name="id_rol" required>
+          <% extras.roles.forEach(r => { %><option value="<%= r.id %>"><%= r.nombre %></option><% }) %>
+        </select></div>
+        <div><label><i class="fas fa-building"></i> Organizacion</label><select name="id_organizacion" required>
+          <% extras.orgs.forEach(o => { %><option value="<%= o.id %>"><%= o.nombre %></option><% }) %>
+        </select></div>
+        <div><label><i class="fas fa-at"></i> Username</label><input type="text" name="username" placeholder="nombre_usuario" required></div>
+        <div><label><i class="fas fa-lock"></i> Password</label><input type="password" name="password" placeholder="••••••" required></div>
+        <div><label><i class="fas fa-toggle-on"></i> Estado</label><select name="estado"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
+      </div>
+      <button class="btn btn-primary mt" type="submit"><i class="fas fa-save"></i> Crear usuario</button>
+    </form>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Usuarios registrados</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Usuario</th><th>Persona</th><th>Rol</th><th>Org</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="7" class="empty"><i class="fas fa-users-slash"></i> Sin usuarios registrados</td></tr><% } %>
+    <% data.forEach((u,i) => { %>
+    <tr style="animation-delay:<%= i*0.03 %>s"><td style="color:#6d28d9;font-weight:700">#<%= u.id %></td>
+    <td><strong style="color:white"><i class="fas fa-user-circle" style="color:#a855f7"></i> <%= u.username %></strong></td>
+    <td><%= u.pnombre %> <%= u.apellido %></td>
+    <td><span class="badge badge-purple"><%= u.rol %></span></td>
+    <td><%= u.org %></td>
+    <td><span class="badge <%= u.estado==='activo'?'badge-green':'badge-red' %>"><i class="fas fa-circle" style="font-size:6px"></i> <%= u.estado %></span></td>
+    <td class="gap">
+      <button class="btn btn-secondary btn-sm" onclick="editarUsuario(<%= u.id %>,'<%= u.username %>','<%= u.pnombre %>','<%= u.apellido %>',<%= u.id_persona %>,<%= u.id_rol %>,<%= u.id_organizacion %>,'<%= u.estado %>')"><i class="fas fa-pen"></i></button>
+      <form action="/admin/usuarios/toggle/<%= u.id %>" method="POST" style="margin:0">
+        <button class="btn btn-warning btn-sm" type="submit"><i class="fas fa-<%= u.estado==='activo'?'pause':'play' %>"></i></button>
+      </form>
+      <form action="/admin/usuarios/del/<%= u.id %>?_method=DELETE" method="POST" style="margin:0" onsubmit="return confirm('Eliminar usuario #<%= u.id %>?')">
+        <button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button>
+      </form>
+    </td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- Modal Editar Usuario -->
+  <div class="modal-overlay" id="modalEditar">
+    <div class="modal-box">
+      <button class="modal-close" onclick="cerrarModal('modalEditar')">&times;</button>
+      <h2><i class="fas fa-user-edit"></i> Editar usuario</h2>
+      <form id="formEditar" action="" method="POST">
+        <div class="form-grid">
+          <div><label>Persona</label><select name="id_persona" id="edit_id_persona" required>
+            <% extras.personas.forEach(p => { %><option value="<%= p.id %>"><%= p.nombre %> <%= p.apellido %></option><% }) %>
+          </select></div>
+          <div><label>Rol</label><select name="id_rol" id="edit_id_rol" required>
+            <% extras.roles.forEach(r => { %><option value="<%= r.id %>"><%= r.nombre %></option><% }) %>
+          </select></div>
+          <div><label>Organizacion</label><select name="id_organizacion" id="edit_id_organizacion" required>
+            <% extras.orgs.forEach(o => { %><option value="<%= o.id %>"><%= o.nombre %></option><% }) %>
+          </select></div>
+          <div><label>Username</label><input type="text" name="username" id="edit_username" required></div>
+          <div><label>Password (dejar vacio = sin cambios)</label><input type="password" name="password" placeholder="Nueva contraseña"></div>
+          <div><label>Estado</label><select name="estado" id="edit_estado">
+            <option value="activo">Activo</option><option value="inactivo">Inactivo</option>
+          </select></div>
+        </div>
+        <button class="btn btn-primary mt" type="submit"><i class="fas fa-save"></i> Guardar cambios</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ PERSONAS ═══ -->
+  <% } else if (seccion === 'personas') { %>
+  <div class="section"><h3><i class="fas fa-plus-circle"></i> Nueva persona</h3>
+    <form action="/admin/personas/new" method="POST">
+      <div class="form-grid">
+        <div><label><i class="fas fa-signature"></i> Nombre</label><input type="text" name="nombre" placeholder="Nombre" required></div>
+        <div><label><i class="fas fa-signature"></i> Apellido</label><input type="text" name="apellido" placeholder="Apellido" required></div>
+        <div><label><i class="fas fa-id-card"></i> Documento</label><input type="text" name="documento" placeholder="N° de documento" required></div>
+      </div>
+      <button class="btn btn-primary mt" type="submit"><i class="fas fa-plus"></i> Agregar</button>
+    </form>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Personas</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Nombre</th><th>Apellido</th><th>Documento</th><th>Accion</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="5" class="empty"><i class="fas fa-user-slash"></i> Sin personas registradas</td></tr><% } %>
+    <% data.forEach((p,i) => { %>
+    <tr style="animation-delay:<%= i*0.03 %>s"><td style="color:#6d28d9;font-weight:700">#<%= p.id %></td><td><%= p.nombre %></td><td><%= p.apellido %></td><td><%= p.documento %></td>
+    <td><form action="/admin/personas/del/<%= p.id %>?_method=DELETE" method="POST" style="margin:0" onsubmit="return confirm('Eliminar persona #<%= p.id %>?')">
+      <button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button>
+    </form></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ ORGANIZACIONES ═══ -->
+  <% } else if (seccion === 'organizaciones') { %>
+  <div class="section"><h3><i class="fas fa-plus-circle"></i> Nueva organizacion</h3>
+    <form action="/admin/organizaciones/new" method="POST">
+      <div class="form-grid">
+        <div><label><i class="fas fa-building"></i> Nombre</label><input type="text" name="nombre" placeholder="Nombre de la organizacion" required></div>
+        <div><label><i class="fas fa-barcode"></i> NIT</label><input type="text" name="nit" placeholder="NIT" required></div>
+      </div>
+      <button class="btn btn-primary mt" type="submit"><i class="fas fa-plus"></i> Crear</button>
+    </form>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Organizaciones</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Nombre</th><th>NIT</th><th>Accion</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="4" class="empty"><i class="fas fa-building-circle-xmark"></i> Sin organizaciones</td></tr><% } %>
+    <% data.forEach((o,i) => { %>
+    <tr style="animation-delay:<%= i*0.03 %>s"><td style="color:#6d28d9;font-weight:700">#<%= o.id %></td><td style="color:white"><%= o.nombre %></td><td><code style="background:#0a0a1a;padding:3px 8px;border-radius:4px;color:#a78bfa;font-size:12px"><%= o.nit %></code></td>
+    <td><form action="/admin/organizaciones/del/<%= o.id %>?_method=DELETE" method="POST" style="margin:0" onsubmit="return confirm('Eliminar <%= o.nombre %>?')">
+      <button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button>
+    </form></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ CATEGORIAS ═══ -->
+  <% } else if (seccion === 'categorias') { %>
+  <div class="section"><h3><i class="fas fa-plus-circle"></i> Nueva categoria</h3>
+    <form action="/admin/categorias/new" method="POST">
+      <div class="form-grid">
+        <div><label><i class="fas fa-tag"></i> Nombre</label><input type="text" name="nombre" placeholder="Ej: Financiero, Soporte..." required></div>
+        <div><label><i class="fas fa-building"></i> Organizacion</label><select name="id_organizacion" required>
+          <% extras.orgs.forEach(o => { %><option value="<%= o.id %>"><%= o.nombre %></option><% }) %>
+        </select></div>
+        <div style="grid-column:1/-1"><label><i class="fas fa-align-left"></i> Descripcion</label><textarea name="descripcion" placeholder="Descripcion de la categoria..."></textarea></div>
+      </div>
+      <button class="btn btn-primary mt" type="submit"><i class="fas fa-plus"></i> Crear</button>
+    </form>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Categorias</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Nombre</th><th>Descripcion</th><th>Org</th><th>Accion</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="5" class="empty"><i class="fas fa-tag-slash"></i> Sin categorias</td></tr><% } %>
+    <% data.forEach((c,i) => { %>
+    <tr style="animation-delay:<%= i*0.03 %>s"><td style="color:#6d28d9;font-weight:700">#<%= c.id %></td>
+    <td style="color:white"><span class="badge badge-purple"><%= c.nombre %></span></td>
+    <td style="color:#4c1d95;font-size:12px"><%= c.descripcion||'—' %></td>
+    <td><%= c.org %></td>
+    <td><form action="/admin/categorias/del/<%= c.id %>?_method=DELETE" method="POST" style="margin:0" onsubmit="return confirm('Eliminar categoria #<%= c.id %>?')">
+      <button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button>
+    </form></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ IMPORTANCIA ═══ -->
+  <% } else if (seccion === 'importancia') { %>
+  <div class="section"><h3><i class="fas fa-plus-circle"></i> Nuevo nivel de importancia</h3>
+    <form action="/admin/importancia/new" method="POST">
+      <div class="form-grid">
+        <div><label><i class="fas fa-tag"></i> Nombre</label><input type="text" name="nombre" placeholder="Alta, Media, Baja..." required></div>
+        <div><label><i class="fas fa-sort"></i> Orden (1 = mas urgente)</label><input type="number" name="orden" min="1" placeholder="1" required></div>
+      </div>
+      <button class="btn btn-primary mt" type="submit"><i class="fas fa-plus"></i> Agregar</button>
+    </form>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Niveles de importancia</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Nombre</th><th>Orden</th><th>Accion</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="4" class="empty"><i class="fas fa-empty"></i> Sin niveles de importancia</td></tr><% } %>
+    <% data.forEach((i,n) => { %>
+    <tr style="animation-delay:<%= n*0.03 %>s"><td style="color:#6d28d9;font-weight:700">#<%= i.id %></td>
+    <td><span class="badge <%= i.orden==1?'badge-red':i.orden==2?'badge-yellow':'badge-green' %>"><i class="fas fa-<%= i.orden==1?'arrow-up':i.orden==2?'minus':'arrow-down' %>"></i> <%= i.nombre %></span></td>
+    <td><div style="background:#2d1054;border-radius:20px;padding:2px 12px;display:inline-block;font-weight:700;color:#a78bfa;font-size:12px"><%= i.orden %></div></td>
+    <td><form action="/admin/importancia/del/<%= i.id %>?_method=DELETE" method="POST" style="margin:0" onsubmit="return confirm('Eliminar <%= i.nombre %>?')">
+      <button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button>
+    </form></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ MEDIOS ═══ -->
+  <% } else if (seccion === 'medios') { %>
+  <div class="section"><h3><i class="fas fa-plus-circle"></i> Nuevo medio</h3>
+    <form action="/admin/medios/new" method="POST">
+      <div class="form-grid">
+        <div><label><i class="fas fa-comment"></i> Tipo</label><input type="text" name="tipo" placeholder="email, sms, whatsapp..." required></div>
+        <div><label><i class="fas fa-link"></i> API Endpoint</label><input type="url" name="apiEndpoint" placeholder="https://api.ejemplo.com"></div>
+      </div>
+      <button class="btn btn-primary mt" type="submit"><i class="fas fa-plus"></i> Agregar</button>
+    </form>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Medios de comunicacion</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Tipo</th><th>Endpoint</th><th>Accion</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="4" class="empty"><i class="fas fa-comment-slash"></i> Sin medios registrados</td></tr><% } %>
+    <% data.forEach((m,i) => { %>
+    <tr style="animation-delay:<%= i*0.03 %>s"><td style="color:#6d28d9;font-weight:700">#<%= m.id %></td>
+    <td><span class="badge badge-purple"><i class="fas fa-<%= m.tipo==='email'?'envelope':m.tipo==='sms'?'comment':m.tipo==='whatsapp'?'whatsapp':'plug' %>"></i> <%= m.tipo %></span></td>
+    <td style="color:#4c1d95;font-size:11px"><code style="background:#0a0a1a;padding:2px 6px;border-radius:4px"><%= m.apiEndpoint||'—' %></code></td>
+    <td><form action="/admin/medios/del/<%= m.id %>?_method=DELETE" method="POST" style="margin:0" onsubmit="return confirm('Eliminar medio #<%= m.id %>?')">
+      <button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button>
+    </form></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ PARAMETRIZACION ═══ -->
+  <% } else if (seccion === 'parametros') { %>
+  <div class="section"><h3><i class="fas fa-plus-circle"></i> Nueva parametrizacion</h3>
+    <form action="/admin/parametros/new" method="POST">
+      <div class="form-grid">
+        <div><label><i class="fas fa-tags"></i> Categoria</label><select name="id_categoria" required>
+          <% extras.cats.forEach(c => { %><option value="<%= c.id %>"><%= c.nombre %></option><% }) %>
+        </select></div>
+        <div><label><i class="fas fa-signal"></i> Importancia</label><select name="id_importancia" required>
+          <% extras.imps.forEach(i => { %><option value="<%= i.id %>"><%= i.nombre %> (orden <%= i.orden %>)</option><% }) %>
+        </select></div>
+        <div><label><i class="fas fa-comment"></i> Medio</label><select name="id_medio" required>
+          <% extras.medios.forEach(m => { %><option value="<%= m.id %>"><%= m.tipo %></option><% }) %>
+        </select></div>
+      </div>
+      <button class="btn btn-primary mt" type="submit"><i class="fas fa-plus"></i> Agregar</button>
+    </form>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Parametrizaciones activas</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Categoria</th><th>Importancia</th><th>Medio</th><th>Accion</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="5" class="empty"><i class="fas fa-sliders-slash"></i> Sin parametrizaciones</td></tr><% } %>
+    <% data.forEach((p,i) => { %>
+    <tr style="animation-delay:<%= i*0.03 %>s"><td style="color:#6d28d9;font-weight:700">#<%= p.id %></td>
+    <td><span class="badge badge-purple"><%= p.cat %></span></td>
+    <td><span class="badge <%= p.orden==1?'badge-red':p.orden==2?'badge-yellow':'badge-green' %>"><i class="fas fa-<%= p.orden==1?'arrow-up':p.orden==2?'minus':'arrow-down' %>"></i> <%= p.imp %></span></td>
+    <td><span class="badge badge-purple"><i class="fas fa-<%= p.medio==='email'?'envelope':p.medio==='sms'?'comment':p.medio==='whatsapp'?'whatsapp':'plug' %>"></i> <%= p.medio %></span></td>
+    <td><form action="/admin/parametros/del/<%= p.id %>?_method=DELETE" method="POST" style="margin:0" onsubmit="return confirm('Eliminar parametrizacion #<%= p.id %>?')">
+      <button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button>
+    </form></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ MENSAJES ═══ -->
+  <% } else if (seccion === 'mensajes') { %>
+  <div class="section"><h3><i class="fas fa-history"></i> Historial de mensajes</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Emisor</th><th>Receptor</th><th>Asunto</th><th>Categoria</th><th>Importancia</th><th>Fecha</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="7" class="empty"><i class="fas fa-inbox"></i> Sin mensajes enviados</td></tr><% } %>
+    <% data.forEach((m,i) => { %>
+    <tr style="animation-delay:<%= i*0.02 %>s"><td style="color:#6d28d9;font-weight:700">#<%= m.id %></td>
+    <td style="color:#a855f7"><i class="fas fa-paper-plane"></i> <%= m.emisor %></td>
+    <td><i class="fas fa-user" style="color:#4c1d95"></i> <%= m.receptor %></td>
+    <td style="color:white;font-weight:500"><%= m.asunto %></td>
+    <td><span class="badge badge-purple"><%= m.cat %></span></td>
+    <td><span class="badge <%= m.orden==1?'badge-red':m.orden==2?'badge-yellow':'badge-green' %>"><i class="fas fa-<%= m.orden==1?'arrow-up':m.orden==2?'minus':'arrow-down' %>"></i> <%= m.imp %></span></td>
+    <td style="color:#4c1d95;font-size:11px"><i class="far fa-calendar"></i> <%= new Date(m.fechaCreacion).toLocaleString() %></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<script>
+// ── Menu movil ──
+document.getElementById('menuToggle')?.addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+});
+document.getElementById('sidebarOverlay')?.addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+});
+
+// ── Animacion de conteo ──
+function animarConteo(){
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const target=parseInt(el.dataset.count)||0;
+    let current=0,step=Math.max(1,Math.floor(target/30));
+    const timer=setInterval(()=>{
+      current+=step;
+      if(current>=target){current=target;clearInterval(timer)}
+      el.textContent=current;
+    },30);
+  });
+}
+animarConteo();
+
+// ── Modal ──
+function editarUsuario(id,username,pnombre,apellido,idPersona,idRol,idOrg,estado){
+  document.getElementById('formEditar').action='/admin/usuarios/edit/'+id;
+  document.getElementById('edit_username').value=username;
+  document.getElementById('edit_id_persona').value=idPersona;
+  document.getElementById('edit_id_rol').value=idRol;
+  document.getElementById('edit_id_organizacion').value=idOrg;
+  document.getElementById('edit_estado').value=estado;
+  document.getElementById('modalEditar').classList.add('show');
+}
+function cerrarModal(id){
+  document.getElementById(id).classList.remove('show');
+}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('show')});
+});
+</script>
+</body>
+</html>

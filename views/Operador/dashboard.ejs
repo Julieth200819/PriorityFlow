@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operador — Priority Flow</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#0a0a1a;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+
+  .sidebar{position:fixed;top:0;left:0;width:240px;height:100vh;background:var(--bg-sidebar);border-right:1px solid var(--border);padding:0;overflow-y:auto;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+  .sidebar::-webkit-scrollbar{width:4px}
+  .sidebar::-webkit-scrollbar-thumb{background:#4c1d95;border-radius:4px}
+  .sidebar .logo{padding:24px 20px 16px;border-bottom:1px solid rgba(76,29,149,.4)}
+  .sidebar .logo::after{content:'';position:absolute;bottom:-1px;left:20%;width:60%;height:1px;background:linear-gradient(90deg,transparent,#a855f7,transparent)}
+  .sidebar .logo h2{font-size:15px;font-weight:900;color:white;letter-spacing:2px;background:linear-gradient(135deg,#fff 60%,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .sidebar .logo p{font-size:10px;color:#7c3aed;margin-top:2px;letter-spacing:.1em}
+  .sidebar .role-tag{margin:14px 20px;background:linear-gradient(135deg,#065f46,#047857);color:#6ee7b7;font-size:10px;font-weight:700;padding:5px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(52,211,153,.3);box-shadow:0 0 20px rgba(5,150,105,.2)}
+  .sidebar .role-tag i{font-size:10px}
+  .nav-section{font-size:9px;font-weight:700;color:#4c1d95;text-transform:uppercase;letter-spacing:.12em;padding:16px 20px 6px}
+  .sidebar a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:#8b7cb8;text-decoration:none;font-size:13px;border-left:3px solid transparent;transition:all .2s ease;position:relative;margin:1px 8px;border-radius:8px}
+  .sidebar a i{width:18px;text-align:center;font-size:14px;transition:transform .2s}
+  .sidebar a:hover{background:rgba(109,40,217,.15);color:white;border-left-color:#a855f7}
+  .sidebar a.active{background:rgba(109,40,217,.2);color:white;border-left-color:#a855f7;box-shadow:inset 0 0 20px rgba(168,85,247,.05)}
+  .sidebar .logout{position:sticky;bottom:0;padding:14px 20px;border-top:1px solid rgba(76,29,149,.4);margin-top:16px;background:linear-gradient(0deg,#1a0533 60%,transparent)}
+  .sidebar .logout a{color:#ef4444;border-left-color:transparent}
+  .sidebar .logout a:hover{background:rgba(239,68,68,.1);color:#fca5a5}
+
+  .main{margin-left:240px;padding:24px 32px;min-height:100vh;position:relative}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid rgba(76,29,149,.2)}
+  .topbar h1{font-size:20px;font-weight:700;color:white;display:flex;align-items:center;gap:10px}
+  .topbar h1 i{color:#a855f7;font-size:18px}
+  .topbar .user{font-size:12px;color:#6ee7b7;background:rgba(6,78,59,.5);padding:6px 16px 6px 12px;border-radius:20px;border:1px solid rgba(5,150,105,.3);display:flex;align-items:center;gap:8px}
+  .topbar .user i{color:#34d399;font-size:10px}
+
+  .toast{background:linear-gradient(135deg,#052e16,#064e3b);color:#4ade80;border:1px solid #166534;padding:12px 20px;border-radius:12px;font-size:13px;margin-bottom:20px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+  .card{background:linear-gradient(135deg,#140028,#1f0540);border:1px solid rgba(109,40,217,.25);border-radius:16px;padding:20px 22px;position:relative;overflow:hidden;transition:all .3s cubic-bezier(.4,0,.2,1)}
+  .card:hover{transform:translateY(-4px);border-color:rgba(168,85,247,.5);box-shadow:0 8px 32px rgba(109,40,217,.25)}
+  .card .label{font-size:10px;font-weight:600;color:#6d28d9;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+  .card .value{font-size:30px;font-weight:800;color:white;line-height:1.2}
+
+  .section{background:linear-gradient(135deg,#120024,#1a0533);border:1px solid rgba(109,40,217,.2);border-radius:16px;padding:24px;margin-bottom:24px}
+  .section h3{font-size:11px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid rgba(76,29,149,.3);display:flex;align-items:center;gap:8px}
+  .section h3 i{font-size:14px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-grid .full{grid-column:1/-1}
+  .form-grid .half{grid-column:span 1}
+  @media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+  label{display:block;font-size:10px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+  input,select,textarea{width:100%;padding:9px 12px;background:rgba(15,5,32,.6);border:1.5px solid rgba(76,29,149,.5);border-radius:10px;color:#e2e8f0;font-size:13px;font-family:inherit;transition:all .2s;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.15)}
+  select option{background:#1a0533}
+  textarea{min-height:80px;resize:vertical}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;transition:all .2s ease;position:relative;overflow:hidden}
+  .btn-primary{background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(124,58,237,.4)}
+  .mt{margin-top:14px}
+
+  .table-wrap{overflow-x:auto;border-radius:12px}
+  table{width:100%;border-collapse:separate;border-spacing:0}
+  th{background:rgba(15,5,32,.6);font-size:9px;font-weight:700;color:#4c1d95;text-transform:uppercase;letter-spacing:.1em;padding:12px 14px;text-align:left;border-bottom:1px solid rgba(45,16,84,.5)}
+  td{padding:12px 14px;font-size:13px;color:#c4b5fd;border-bottom:1px solid rgba(26,5,51,.5);transition:background .15s}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(109,40,217,.06)}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+  .badge-green{background:rgba(4,120,87,.15);color:#4ade80;border:1px solid rgba(22,101,52,.5)}
+  .badge-red{background:rgba(153,27,27,.15);color:#f87171;border:1px solid rgba(153,27,27,.4)}
+  .badge-purple{background:rgba(109,40,217,.15);color:#c4b5fd;border:1px solid rgba(109,40,217,.3)}
+  .badge-yellow{background:rgba(120,53,15,.15);color:#fbbf24;border:1px solid rgba(120,53,15,.4)}
+  .empty{color:#4c1d95;font-size:13px;text-align:center;padding:32px 16px;font-style:italic}
+
+  .menu-toggle{display:none;position:fixed;top:16px;left:16px;z-index:200;background:#2d1054;border:1px solid #6d28d9;color:white;width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:18px;align-items:center;justify-content:center}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+  .sidebar-overlay.show{display:block}
+
+  .info-box{background:rgba(120,53,15,.1);border:1px solid rgba(120,53,15,.4);border-radius:12px;padding:18px 20px;margin-top:16px}
+  .info-box h4{color:#fbbf24;font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .info-box p{font-size:12px;color:#d97706;line-height:1.6}
+
+  @media(max-width:768px){
+    .menu-toggle{display:flex}
+    .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0)}
+    .sidebar-overlay.show{display:block}
+    .main{margin-left:0;padding:16px}
+    .cards{grid-template-columns:1fr 1fr}
+    .topbar h1{font-size:16px}
+  }
+  @media(max-width:480px){.cards{grid-template-columns:1fr}}
+
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:#0a0a1a}
+  ::-webkit-scrollbar-thumb{background:#2d1054;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#4c1d95}
+</style>
+</head>
+<body>
+<button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="logo">
+    <h2>PRIORITY FLOW</h2>
+    <p><%= usuario.org %></p>
+  </div>
+  <span class="role-tag"><i class="fas fa-headset"></i> OPERADOR</span>
+  <div class="nav-section">Navegacion</div>
+  <a href="/operador?seccion=dashboard&u=<%= usuario.username %>" class="<%= seccion==='dashboard'?'active':'' %>"><i class="fas fa-chart-pie"></i> Resumen</a>
+  <a href="/operador?seccion=enviar&u=<%= usuario.username %>" class="<%= seccion==='enviar'?'active':'' %>"><i class="fas fa-paper-plane"></i> Enviar Mensaje</a>
+  <a href="/operador?seccion=historial&u=<%= usuario.username %>" class="<%= seccion==='historial'?'active':'' %>"><i class="fas fa-clock-rotate"></i> Historial</a>
+  <a href="/operador?seccion=detalles&u=<%= usuario.username %>" class="<%= seccion==='detalles'?'active':'' %>"><i class="fas fa-circle-info"></i> Detalles Envio</a>
+  <div class="logout"><a href="/logout"><i class="fas fa-right-from-bracket"></i> Cerrar sesion</a></div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1><i class="fas fa-<%= seccion==='dashboard'?'chart-pie':seccion==='enviar'?'paper-plane':seccion==='historial'?'clock-rotate':'circle-info' %>"></i>
+      <% if(seccion==='dashboard'){ %>Resumen<% } else if(seccion==='enviar'){ %>Enviar Mensaje<% } else if(seccion==='historial'){ %>Historial<% } else { %>Detalles de Envio<% } %></h1>
+    <span class="user"><i class="fas fa-circle"></i> <%= usuario.username %> <span style="color:#4c1d95">|</span> <%= usuario.org %></span>
+  </div>
+
+  <% if (typeof msg !== 'undefined' && msg) { %><div class="toast"><i class="fas fa-check-circle"></i> <%= msg %></div><% } %>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <% if (seccion === 'dashboard') { %>
+  <div class="cards">
+    <div class="card" style="--glow:rgba(192,132,252,.15)"><div class="label">Mis Mensajes</div><div class="value" style="color:#c084fc"><%= stats.total %></div></div>
+    <div class="card" style="--glow:rgba(248,113,113,.15)"><div class="label">Alta Prioridad</div><div class="value" style="color:#f87171"><%= stats.alta %></div></div>
+    <div class="card" style="--glow:rgba(251,191,36,.15)"><div class="label">Media</div><div class="value" style="color:#fbbf24"><%= stats.media %></div></div>
+    <div class="card" style="--glow:rgba(52,211,153,.15)"><div class="label">Baja</div><div class="value" style="color:#4ade80"><%= stats.baja %></div></div>
+  </div>
+  <div class="section"><h3><i class="fas fa-list"></i> Ultimos mensajes enviados</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Asunto</th><th>Receptor</th><th>Importancia</th><th>Fecha</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="5" class="empty">Sin mensajes</td></tr><% } %>
+    <% data.forEach(m => { %>
+    <tr><td style="color:#6d28d9;font-weight:700">#<%= m.id %></td><td style="color:white;font-weight:500"><%= m.asunto %></td><td><%= m.receptor %></td>
+    <td><span class="badge <%= m.orden==1?'badge-red':m.orden==2?'badge-yellow':'badge-green' %>"><i class="fas fa-<%= m.orden==1?'arrow-up':m.orden==2?'minus':'arrow-down' %>"></i> <%= m.imp %></span></td>
+    <td style="color:#4c1d95;font-size:11px"><i class="far fa-calendar"></i> <%= new Date(m.fechaCreacion).toLocaleString() %></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ ENVIAR MENSAJE ═══ -->
+  <% } else if (seccion === 'enviar') { %>
+  <div class="section"><h3><i class="fas fa-pen"></i> Nuevo mensaje</h3>
+    <form action="/operador/mensajes/new" method="POST">
+      <input type="hidden" name="u" value="<%= usuario.username %>">
+      <div class="form-grid">
+        <div class="half"><label><i class="fas fa-user"></i> Receptor</label><select name="id_persona_receptor" required>
+          <% extras.personas.forEach(p => { %><option value="<%= p.id %>"><%= p.nombre %> <%= p.apellido %></option><% }) %>
+        </select></div>
+        <div class="half"><label><i class="fas fa-tag"></i> Categoria</label>
+          <select name="id_categoria" id="id_categoria" required onchange="document.getElementById('nueva-categoria-wrap').style.display=this.value==='otra'?'block':'none'">
+          <% extras.cats.forEach(c => { %><option value="<%= c.id %>"><%= c.nombre %></option><% }) %>
+          <option value="otra">Otra</option>
+        </select>
+        <div id="nueva-categoria-wrap" style="display:none;margin-top:8px">
+          <input type="text" name="nueva_categoria" placeholder="Nombre de la nueva categoria" style="font-size:12px;padding:7px 10px">
+        </div></div>
+        <div class="half"><label><i class="fas fa-heading"></i> Asunto</label><input type="text" name="asunto" required placeholder="Titulo del mensaje"></div>
+      </div>
+      <div style="margin-top:14px"><label><i class="fas fa-align-left"></i> Cuerpo del mensaje</label>
+        <textarea name="cuerpo" required placeholder="Escribe aqui el contenido de la notificacion..." style="min-height:100px"></textarea></div>
+      <button class="btn btn-primary mt" type="submit"><i class="fas fa-paper-plane"></i> Enviar mensaje</button>
+    </form>
+  </div>
+  <div class="info-box">
+    <h4><i class="fas fa-lightbulb"></i> Como funciona la priorizacion</h4>
+    <p>Al enviar un mensaje, el sistema revisa la parametrizacion de la categoria elegida y automaticamente determina por cuales medios se enviara (email, SMS, WhatsApp) segun el nivel de importancia configurado. Mensajes de <strong style="color:#f87171">Alta</strong> importancia se envian por todos los canales disponibles.</p>
+  </div>
+
+  <!-- ═══ HISTORIAL ═══ -->
+  <% } else if (seccion === 'historial') { %>
+  <div class="section"><h3><i class="fas fa-clock-rotate"></i> Mensajes enviados</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Asunto</th><th>Receptor</th><th>Categoria</th><th>Importancia</th><th>Fecha</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="6" class="empty">Sin mensajes</td></tr><% } %>
+    <% data.forEach(m => { %>
+    <tr><td style="color:#6d28d9;font-weight:700">#<%= m.id %></td><td style="color:white;font-weight:500"><%= m.asunto %></td><td><%= m.receptor %></td>
+    <td><span class="badge badge-purple"><%= m.cat %></span></td>
+    <td><span class="badge <%= m.orden==1?'badge-red':m.orden==2?'badge-yellow':'badge-green' %>"><i class="fas fa-<%= m.orden==1?'arrow-up':m.orden==2?'minus':'arrow-down' %>"></i> <%= m.imp %></span></td>
+    <td style="color:#4c1d95;font-size:11px"><i class="far fa-calendar"></i> <%= new Date(m.fechaCreacion).toLocaleString() %></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+
+  <!-- ═══ DETALLES ═══ -->
+  <% } else if (seccion === 'detalles') { %>
+  <div class="section"><h3><i class="fas fa-circle-info"></i> Estado de envios</h3>
+    <div class="table-wrap">
+    <table><thead><tr><th>ID</th><th>Mensaje</th><th>Canal</th><th>Estado</th><th>Intentos</th><th>Fecha</th></tr></thead>
+    <tbody>
+    <% if(data.length===0){ %><tr><td colspan="6" class="empty">Sin detalles</td></tr><% } %>
+    <% data.forEach(d => { %>
+    <tr><td style="color:#6d28d9;font-weight:700">#<%= d.id %></td><td style="color:white"><%= d.asunto %></td>
+    <td><span class="badge badge-purple"><%= d.medio %></span></td>
+    <td><span class="badge <%= d.estado==='enviado'?'badge-green':d.estado==='pendiente'?'badge-yellow':'badge-red' %>"><i class="fas fa-<%= d.estado==='enviado'?'check':d.estado==='pendiente'?'hourglass':'xmark' %>"></i> <%= d.estado %></span></td>
+    <td><%= d.intento %></td>
+    <td style="color:#4c1d95;font-size:11px"><i class="far fa-calendar"></i> <%= new Date(d.fechaTransaccion).toLocaleString() %></td></tr>
+    <% }) %>
+    </tbody></table>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<script>
+document.getElementById('menuToggle')?.addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+});
+document.getElementById('sidebarOverlay')?.addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+});
+</script>
+</body>
+</html>

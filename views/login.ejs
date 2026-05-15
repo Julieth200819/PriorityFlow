@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Priority Flow — Login</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#0a0a1a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .box{background:linear-gradient(135deg,#140028,#1f0540);border:1px solid rgba(109,40,217,.4);border-radius:20px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(109,40,217,.25)}
+  .brand{text-align:center;margin-bottom:32px}
+  .brand .logo-wrap{width:56px;height:56px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;color:white;font-weight:900;margin:0 auto 14px;box-shadow:0 4px 20px rgba(124,58,237,.3)}
+  .brand h1{font-size:28px;font-weight:900;color:white;letter-spacing:2px}
+  .brand h1 span{color:#a855f7}
+  .brand p{color:#a78bfa;font-size:13px;margin-top:4px}
+  label{display:block;color:#6d28d9;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;margin-top:18px}
+  label i{margin-right:4px}
+  input{width:100%;padding:11px 14px;background:rgba(15,5,32,.6);border:1.5px solid rgba(76,29,149,.5);border-radius:10px;color:white;font-size:14px;transition:all .2s;outline:none}
+  input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.15)}
+  input::placeholder{color:#4c1d95}
+  button{width:100%;margin-top:24px;padding:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;letter-spacing:.05em;transition:all .2s;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+  button:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(124,58,237,.4)}
+  .error{background:rgba(153,27,27,.15);color:#f87171;border:1px solid rgba(153,27,27,.4);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;text-align:center;display:flex;align-items:center;gap:8px;justify-content:center}
+  .register-link{text-align:center;margin-top:18px}
+  .register-link a{color:#7c3aed;font-size:13px;text-decoration:none;transition:color .2s}
+  .register-link a:hover{color:#a855f7}
+  .roles-info{display:flex;gap:8px;margin-top:20px;justify-content:center;flex-wrap:wrap}
+  .role-chip{padding:4px 12px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid rgba(76,29,149,.3);color:#4c1d95;background:rgba(45,16,84,.3)}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="brand">
+    <div class="logo-wrap">PF</div>
+    <h1>PRIORITY<span>FLOW</span></h1>
+    <p>Sistema de Notificaciones Inteligentes</p>
+  </div>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="error"><i class="fas fa-exclamation-circle"></i> Usuario o contraseña incorrectos</div>
+  <% } %>
+  <form action="/login" method="POST">
+    <label><i class="fas fa-at"></i> Usuario</label>
+    <input type="text" name="username" placeholder="Ingresa tu usuario" required autofocus>
+    <label><i class="fas fa-lock"></i> Contraseña</label>
+    <input type="password" name="password" placeholder="••••••••" required>
+    <button type="submit"><i class="fas fa-arrow-right-to-bracket"></i> INGRESAR</button>
+  </form>
+  <div class="register-link">
+    <a href="/register"><i class="fas fa-user-plus"></i> ¿No tienes cuenta? Registrate</a>
+  </div>
+  <div class="roles-info">
+    <span class="role-chip">Admin</span>
+    <span class="role-chip">Operador</span>
+    <span class="role-chip">Cliente</span>
+  </div>
+</div>
+</body>
+</html>

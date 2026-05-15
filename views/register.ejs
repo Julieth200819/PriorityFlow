@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Priority Flow — Registro</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#0a0a1a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .box{background:linear-gradient(135deg,#140028,#1f0540);border:1px solid rgba(109,40,217,.4);border-radius:20px;padding:40px 36px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(109,40,217,.25)}
+  .brand{text-align:center;margin-bottom:28px}
+  .brand h1{font-size:28px;font-weight:900;color:white;letter-spacing:2px;background:linear-gradient(135deg,#fff 60%,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .brand p{color:#a78bfa;font-size:13px;margin-top:4px}
+  .brand .icon{font-size:36px;margin-bottom:8px}
+  label{display:block;color:#6d28d9;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;margin-top:14px}
+  label i{margin-right:4px}
+  input{width:100%;padding:11px 14px;background:rgba(15,5,32,.6);border:1.5px solid rgba(76,29,149,.5);border-radius:10px;color:white;font-size:14px;transition:all .2s;outline:none}
+  input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.15)}
+  input::placeholder{color:#4c1d95}
+  button{width:100%;margin-top:24px;padding:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;letter-spacing:.05em;transition:all .2s;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+  button:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(124,58,237,.4)}
+  .msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;text-align:center;display:flex;align-items:center;gap:8px;justify-content:center}
+  .error{background:rgba(153,27,27,.15);color:#f87171;border:1px solid rgba(153,27,27,.4)}
+  .success{background:rgba(22,101,52,.15);color:#4ade80;border:1px solid rgba(22,101,52,.4)}
+  .login-link{text-align:center;margin-top:18px}
+  .login-link a{color:#7c3aed;font-size:13px;text-decoration:none;transition:color .2s}
+  .login-link a:hover{color:#a855f7}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .full{grid-column:1/-1}
+  .info{border:1px solid rgba(109,40,217,.3);background:rgba(45,16,84,.3);border-radius:10px;padding:12px 16px;font-size:12px;color:#a78bfa;margin-top:16px;display:flex;align-items:center;gap:8px}
+  .info i{color:#7c3aed;font-size:16px}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="brand">
+    <div class="icon">&#128228;</div>
+    <h1>PRIORITY FLOW</h1>
+    <p>Crear cuenta de cliente</p>
+  </div>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="msg error"><i class="fas fa-exclamation-circle"></i> <%= error %></div>
+  <% } %>
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="msg success"><i class="fas fa-check-circle"></i> <%= success %></div>
+  <% } %>
+  <form action="/register" method="POST">
+    <div class="form-grid">
+      <div><label><i class="fas fa-user"></i> Nombre</label><input type="text" name="nombre" placeholder="Tu nombre" required autofocus></div>
+      <div><label><i class="fas fa-user"></i> Apellido</label><input type="text" name="apellido" placeholder="Tu apellido" required></div>
+      <div class="full"><label><i class="fas fa-envelope"></i> Correo electronico</label><input type="email" name="correo" placeholder="tucorreo@ejemplo.com" required></div>
+      <div class="full"><label><i class="fas fa-at"></i> Nombre de usuario</label><input type="text" name="username" placeholder="Elige un nombre de usuario" required></div>
+      <div><label><i class="fas fa-lock"></i> Contraseña</label><input type="password" name="password" placeholder="Minimo 4 caracteres" required></div>
+      <div><label><i class="fas fa-check"></i> Confirmar</label><input type="password" name="confirm" placeholder="Repite la contraseña" required></div>
+    </div>
+    <div class="info"><i class="fas fa-info-circle"></i> Te registraras como cliente. Podras recibir notificaciones de diferentes organizaciones.</div>
+    <button type="submit"><i class="fas fa-user-plus"></i> CREAR CUENTA</button>
+  </form>
+  <div class="login-link">
+    <a href="/"><i class="fas fa-arrow-left"></i> ¿Ya tienes cuenta? Inicia sesion</a>
+  </div>
+</div>
+</body>
+</html>
